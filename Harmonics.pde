@@ -4,6 +4,8 @@ import ddf.minim.effects.*;
 import ddf.minim.signals.*;
 import ddf.minim.spi.*;
 import ddf.minim.ugens.*;
+import java.util.Collections;
+import java.util.Arrays;
 
 //variables
   Minim minim;
@@ -16,7 +18,7 @@ import ddf.minim.ugens.*;
   FilePlayer filePlayer;
   AudioPlayer audioFile;
   //Analysis
-  FFT fftLinear;
+  FFT fft;
   FFT fftLog;
   int highest;
   float highestAmp;
@@ -25,12 +27,20 @@ import ddf.minim.ugens.*;
   float scale = 4; 
   //Audio file
    boolean run = false;
-
+   float[] freqArr = new float[85];
+  //Amplitude rectangle
+    PVector pos = new PVector();
+    PVector siz = new PVector(40, 0);
+   
+   
+   
 void setup(){
   
   size(800, 600);
   textAlign(CENTER, CENTER);
-  rectMode(CORNERS);
+  rectMode(CORNER);
+  
+  
   
    minim  = new Minim(this);
   
@@ -39,18 +49,20 @@ void setup(){
     sampleRate = 44100; // 
     timeSize = 1024;  //bufferSize
   //Audio intialize
-    input = minim.getLineIn(Minim.MONO, timeSize, sampleRate); //getting mic input 
+    input = minim.getLineIn(Minim.STEREO, timeSize, sampleRate); //getting mic input 
     output = minim.getLineOut(Minim.MONO, timeSize, sampleRate); //getting speaker output
-    recorder = minim.createRecorder(input, "originalRecording.wav"); //setting the input of the recording and its file 
-    audioFile = minim.loadFile("originalRecording.wav", 1024);
+    //recorder = minim.createRecorder(input, "originalRecording.wav"); //setting the input of the recording and its file 
+    //audioFile = minim.loadFile("originalRecording.wav", 1024);
     
-    audioFile.loop();
+    //audioFile.play();
     
-    fftLinear = new FFT(audioFile.bufferSize(), audioFile.sampleRate());
-    fftLinear.linAverages(30);
+    fft = new FFT(1024, 44100);
+    fft.noAverages();
     
-    fftLog = new FFT(audioFile.bufferSize(), audioFile.sampleRate());
-    fftLog.logAverages(22 , 3);
+    //fftLog = new FFT(1024, 44100);
+    //fftLog.logAverages(22 , 3);
+    
+    //fftLog.setFreq(157,5000);
     
     
  
@@ -60,9 +72,11 @@ void draw(){
   
   //UPDATE
     background(50);
-    fftLinear.forward(audioFile.mix);
-    fftLog.forward(audioFile.mix);
+    fft.forward(input.mix);
+    textSize(20);
+    text("Frequency Visualizer", width/2, height/8);
     float centerFreq = 0;
+    textSize(12);
     
   //CHECK
     
@@ -70,121 +84,36 @@ void draw(){
       
   //DRAW
   
-    //Visualizes audio input 
-    
-    //text("Audio Visualizer: ", 100, height/2 - 75); 
-    //for(int i = 1; i < input.bufferSize() - 1; i++){
-    //  stroke(255);
-    //  //get functions returns -1 to 1 so it needs to be multipled to be scaled 
-    //  line(i, height/2 + input.left.get(i)*75, i + 1, height/2 + input.left.get(i+1)*75);
-    //}
-    
-    
-    
-    
-    
-    //for (int i = 0; i < audioPlayer.bufferSize() - 1; i++){
-    //  line(i, 50 + audioPlayer.left.get(i)*50, i+1, 50 + audioPlayer.left.get(i+1)*50);
-    //  line(i, 150 + audioPlayer.right.get(i)*50, i+1, 150 + audioPlayer.right.get(i+1)*50);
-    //}
-    
+    //drawingaverages of frequencies 
     stroke(255);
-    for(int i = 0; i < fftLinear.specSize(); i++){
-      line(i, height/3, i, height/3 - fftLinear.getBand(i) * scale);
-    }
-    
-    //noStroke();
-    //int widthOfBar = int(width/fftLinear.avgSize());
-    //for(int i = 0; i < fftLinear.avgSize(); i++)
-    //{
-    //  // if the mouse is inside the bounds of this average,
-    //  // print the center frequency and fill in the rectangle with red
-    //  if ( mouseX >= i*widthOfBar && mouseX < i*widthOfBar + widthOfBar )
-    //  {
-    //    centerFreq = fftLinear.getAverageCenterFrequency(i);
-        
-    //    fill(255);
-    //    text("Linear Average Center Frequency: " + centerFreq, width/2, 2*height/3 - 300);
-        
-    //    fill(255, 0, 0);
-    //  }
-    //  else
-    //  {
-    //      fill(255);
-    //  }
-    //  // draw a rectangle for each average, multiply the value by spectrumScale so we can see it better
-    //  rect(i*widthOfBar, 2*height/3, i*widthOfBar + widthOfBar, 2*height/3 - fftLinear.getAvg(i)* scale);
-    //}
-    
-    for(int i = 0; i < fftLog.avgSize(); i++){
-    
-      centerFreq = fftLog.getAverageCenterFrequency(i);
-      float averageWidth = fftLog.getAverageBandWidth(i);
+    for(int i = 3; i < fft.specSize()/3; i++){ //going through the bands
       
-      float lowFreq = centerFreq - averageWidth/2;
-      float highFreq = centerFreq + averageWidth/2;
+      float freq = fft.indexToFreq(i); //frequency of i band
       
-      int x1 = (int)fftLog.freqToIndex(lowFreq);
-      int x2 = (int)fftLog.freqToIndex(highFreq);
       
-      if( mouseX >= x1 && mouseX < x2){
-        
-        fill(255, 200, 0);
-        text("Log average center Frequency: " + centerFreq, width/2, height/2);
-        fill(255, 0, 0);
-       
-      } else {
+      println("Freq: " + freq + " index: " + i + " amp: " + fft.getBand(i));
       
-        fill(255);
-        
+      //records if i's amplitude is bigger than the highest 
+      if(fft.getBand(i) > fft.getBand(highest)){
+        highest = i; 
+        highestAmp = fft.getBand(i);
+        println("new high!");
       }
-            
-      rect(x1 , height, x2, height - fftLog.getAvg(i) * scale);
       
+      //shows what band frequency your mouse is on 
+      if(mouseX > i*4-1 + 50 && mouseX < (i+1)*4 + 50){
+        stroke(255, 0, 0);
+        text("Frequency of the Band: " + fft.indexToFreq(i), width/2, height/2);
+      } else { 
+        stroke(255);
+      }
+      
+      // drawing the amplitudes of bands
+      line(i * 4 +50, height/1.5, i * 4+ 50, height/1.5 - fft.getBand(i) * scale);
+    
     }
-    
-    if(recorder.isRecording()){
-      text("RECORDING", width -100, 50);
-    }
+    //prints the frequency with the highest amplitude found 
+    println("HIGHEST Freq: " + fft.indexToFreq(highest) + " index: " + highest + " amp: " + highestAmp);
    
-}  
-
-void keyPressed(){
-  
-  if(key == 'r'){
-    recorder.beginRecord();    
-    
-    print("Recording...");
-  }
-  
-  if(keyCode == ENTER){
-    recorder.save();   
-    
-    println("\nRecording Saved");
-  }
-
-  if(key == 'p'){
    
-    playAudio("originalRecording.wav");
-    println("playing");
-  }
-  
-}
-
-void keyReleased(){
-
-  if(key == 'r') {
-    recorder.endRecord();
-   
-    
-  }
-  
-}
-
-void playAudio(String fileName){
-
-  audioFile = minim.loadFile(fileName);
-  audioFile.rewind();
-  audioFile.play();
-  
 }
