@@ -51,20 +51,11 @@ void setup(){
   //Audio intialize
     input = minim.getLineIn(Minim.STEREO, timeSize, sampleRate); //getting mic input 
     output = minim.getLineOut(Minim.MONO, timeSize, sampleRate); //getting speaker output
-    //recorder = minim.createRecorder(input, "originalRecording.wav"); //setting the input of the recording and its file 
-    //audioFile = minim.loadFile("originalRecording.wav", 1024);
-    
-    //audioFile.play();
     
     fft = new FFT(1024, 44100);
     fft.noAverages();
     
-    //fftLog = new FFT(1024, 44100);
-    //fftLog.logAverages(22 , 3);
-    
-    //fftLog.setFreq(157,5000);
-    
-    
+ 
  
 }
 
@@ -86,7 +77,7 @@ void draw(){
   
     //drawingaverages of frequencies 
     stroke(255);
-    for(int i = 3; i < fft.specSize()/3; i++){ //going through the bands
+    for(int i = 5; i < fft.specSize()/3; i++){ //going through the bands
       
       float freq = fft.indexToFreq(i); //frequency of i band
       
@@ -103,7 +94,7 @@ void draw(){
       //shows what band frequency your mouse is on 
       if(mouseX > i*4-1 + 50 && mouseX < (i+1)*4 + 50){
         stroke(255, 0, 0);
-        text("Frequency of the Band: " + fft.indexToFreq(i), width/2, height/2);
+        text("Frequency of the Band: " + (int)fft.indexToFreq(i) + "Hz", width/2, height/2);
       } else { 
         stroke(255);
       }
@@ -114,6 +105,6 @@ void draw(){
     }
     //prints the frequency with the highest amplitude found 
     println("HIGHEST Freq: " + fft.indexToFreq(highest) + " index: " + highest + " amp: " + highestAmp);
-   
+    text("Highest Amplitude: " + (int)fft.indexToFreq(highest) + "Hz", width/2, height/1.25);
    
 }
