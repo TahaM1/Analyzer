@@ -14,3 +14,8 @@ A program that visualizes the frequencies from a device's microphone input
 You can find the .exe for Windows 64-bit and 32-bit [here](https://github.com/TahaM1/Frequency-Visualizer/releases/tag/v1.0)
 
 Note: Java 8 is required for the 32-bit version
+
+## Built with 
+- Java 
+- Processing 3
+- Minim audio library
