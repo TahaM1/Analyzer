@@ -4,7 +4,7 @@
 ![Demo of the program](https://raw.githubusercontent.com/TahaM1/Frequency-Visualizer/master/demo/demo.gif "DEMO")
 
 ## Description
-A program that visualizes the frequencies from a device's microphone
+A program that visualizes the frequencies from a device's microphone input
 
 ## Features
 - Hovering over each band will display the average frequency of that band
