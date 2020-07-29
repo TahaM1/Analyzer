@@ -1,5 +1,5 @@
 
-# Frequency Analyzer
+# Frequency Visualizer
 
 ## Description
 This is a simple program that visualizes the amplitude of various frequency bands
